@@ -11,11 +11,10 @@ from exceptions.tw import TwError
 
 SideTuple = Tuple[SideCli, Side]
 
-SIDE_LINK: Dict[SideType, SideTuple] = {
+SIDE_LINK = {
     SideType.CLIENT: (ServerCli, Server),
     SideType.SERVER: (ServerCli, Server)
 }
-IMG_PREFIX="images/"
 
 class Tw:
     """
@@ -32,9 +31,11 @@ class Tw:
         cli, side = SIDE_LINK[self.side]
 
         # Get the Cli and the Side controller class
-        cli = cli()
         side = side()
+        cli = cli(side)
+        
+        cli.setup()
         
         # Filling and running the Side class
         # with the Cli informations
-        cli.call(side)
+        cli.call()

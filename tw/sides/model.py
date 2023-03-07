@@ -1,9 +1,18 @@
 """interface module"""
 
+import docker
+import re
+
 from enum import Enum
 from argparse import ArgumentParser
+from os import path
+from typing import Union
+from sys import stderr
 
 from exceptions.tw import TwError
+
+IMG_PREFIX="./images"
+BASE_DOCKERFILE="base.Dockerfile"
 
 class SideType(Enum):
     """
@@ -14,22 +23,13 @@ class SideType(Enum):
     CLIENT="client"
     UNKNOWN="unknown"
 
-class Side:
+class SideBase:
     """
-        Model for the different sides
-    """
-    
-    def __init__(self, side: SideType = SideType.UNKNOWN):
-        self._side = side
-        self._key = None
-    
-    def set_key(self, key: str):
-        """
-            Set self._key
-        """
+        Virtual pure interface for the `Side` class
         
-        self._key = key
-    
+        This meFunctionthods will be used with the CLI args
+    """
+
     def build(self):
         """
             Build the container
@@ -44,45 +44,220 @@ class Side:
         
         raise TwError("Not implemented !")
 
+    def clean(self):
+        """
+            Kill the containers
+        """
+        
+        raise TwError("Not implemented !")
+
+    def fclean(self):
+        """
+            Full clean
+        """
+        
+        raise TwError("Not implemented !")
+    
+    def re(self):
+        """
+            `self.fclean` --> `self.build` --> `self.run`
+        """
+        
+        raise TwError("Not implemented !")
+
+class Side(SideBase):
+    """
+        Model for the different sides
+        ~
+        Interface + abstract
+    """
+    
+    def __init__(self, side: SideType = SideType.UNKNOWN):
+        self._side = side
+        self._key = None
+        self._docker = docker.from_env()
+        self.__base_name = "tw_" + self._side.value
+    
+    def __base_dockerfile(self) -> Union[str, None]:
+        """
+            Return base Dockerfile if exists or `None`
+        """
+        
+        base = self._side_folder + "/" + BASE_DOCKERFILE
+        
+        if not path.exists(base):
+            return None
+        
+        return base
+
+    def __base_tag(self) -> str:
+        """
+            Base tag name
+        """
+        
+        return "tw_base_" + self._side.value
+    
+    def _build_base(self):
+        """
+            Try to build a potential `base.dockerfile`
+        """
+        
+        if not (base := self.__base_dockerfile()):
+            return
+
+        self._docker.images.build(
+            path=self._side_folder,
+            dockerfile=BASE_DOCKERFILE,
+            tag=self.__base_tag()
+        )
+    
+    @property
+    def _containers(self) -> list:
+        """
+            Return every `Side` containers
+        """
+        
+        # Containers are called with the 
+        # same base name as the image name
+        re_container = re.compile(rf"^/{self.image}\d+$")
+
+        return filter(
+            lambda c: re_container.fullmatch(c.attrs.get("Name")),
+            self._docker.containers.list()
+        )
+    
+    @property
+    def _container_last_id(self) -> int:
+        """
+            Return the last id created
+        """
+
+        containers = list(self._containers)
+
+        if len(containers) == 0:
+            return 0
+
+        return max(
+            map(
+                lambda c: int(
+                    c.attrs
+                        .get("Name")
+                        .replace("/" + self.image, "")
+                ),
+                containers
+            )
+        )
+    
+    @property
+    def _side_folder(self) -> str:
+        """
+            Get the folder of the side
+        """
+    
+        return IMG_PREFIX + "/" + self._side.value 
+        
+    @property
+    def _key_folder(self) -> str:
+        """
+            Get the full path to the folder
+        """
+        
+        if not self._key:
+            raise TwError("The key has not been set !")
+        
+        return self._side_folder + "/" + self._key
+    
+    def set_key(self, key: str):
+        """
+            Set self._key
+        """
+        
+        self._key = key
+            
+        if not path.exists(self._key_folder):
+            raise TwError("Invalid key")
+
+    def clean(self):
+        for container in self._containers:
+            container.kill()
+
+    def clean_network(self):
+        """
+            Remove the network
+        """
+        
+        # for network in self._client.networks.list(
+        #     names=[self.network]
+        # ):
+        #     network.remove()
+        
+        pass
+
+    def fclean(self):
+        self.clean()
+        self.clean_network()
+        
+        # Remove images
+        try:
+            self._docker.images.remove(
+                image=self.image,
+                force=True
+            )
+        except docker.errors.ImageNotFound as error:
+            print(error, file=stderr)
+    
+    def re(self):
+        self.fclean()
+        self.build()
+        self.run()
+    
     @property
     def image(self) -> str:
         """
-            Return the Docker image name
-        """
-    
-        return "tw_" + self._side.value + "_" + self._key
-    
-    @property
-    def network(self) -> str:
-        """
-            Return the Docker network name
+            Return the Docker image tag
         """
         
-        return "tw_network" + self._side.value + "_" + self._key
+        if not self._key:
+            raise TwError("The key has not been set !")
+    
+        return self.__base_name + "_" + self._key
 
 class SideCli(ArgumentParser):
     """
         Model CLI manager
     """
     
-    def __init__(self):
+    def __init__(self, side: Side):
         super().__init__()
-
+        
         self.add_argument(
             "--build",
             action="store_true",
-            help="Build the Docker container"
+            help="Build (needed before --run)"
         )
         
         self.add_argument(
             "--run",
             action="store_true",
-            help="Run the Docker container"
+            help="Run"
         )
+        
+        self.add_argument(
+            "--clean",
+            action="store_true",
+            help="Kill the instances"
+        )
+    
+    def setup(self):
+        """
+            Setup objects before calling CLI functions
+        """
+        
+        raise TwError("Not implemented !")
 
     def call(self, model: Side):
         """
-            Just run...
+            Interact with a `Side` class or child
         """
 
         raise TwError("Not implemented !")
