@@ -1,7 +1,7 @@
 FROM tw_base_client:latest
 
 # Working directory
-ENV DIRNAME tw
+ENV DIRNAME client
 
 # Clone the git repository
 RUN git clone https://github.com/teeworlds/teeworlds --recurse-submodules $DIRNAME
@@ -12,9 +12,7 @@ WORKDIR $DIRNAME
 RUN mkdir -p build && \
     cd build && \
     cmake .. && \
-    make teeworlds
-
-# Not working if running the executable outside the build directory
-WORKDIR build
+    make teeworlds && \
+    cp -r * .. && cd ..
 
 ENTRYPOINT [ "./teeworlds"]

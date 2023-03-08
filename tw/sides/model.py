@@ -2,6 +2,7 @@
 
 import docker
 import re
+import os
 
 from enum import Enum
 from argparse import ArgumentParser
@@ -11,7 +12,11 @@ from sys import stderr
 
 from exceptions.tw import TwError
 
-IMG_PREFIX="./images"
+FILEPATH=os.path.realpath(__file__)
+REAL_BASE="/".join(FILEPATH.split("/")[:-3])
+
+IMG_PREFIX=REAL_BASE + "/images"
+
 BASE_DOCKERFILE="base.Dockerfile"
 
 class SideType(Enum):
@@ -40,13 +45,6 @@ class SideBase:
     def run(self):
         """
             Run the container
-        """
-        
-        raise TwError("Not implemented !")
-
-    def clean(self):
-        """
-            Kill the containers
         """
         
         raise TwError("Not implemented !")
@@ -177,10 +175,6 @@ class Side(SideBase):
         if not path.exists(self._key_folder):
             raise TwError("Invalid key")
 
-    def clean(self):
-        for container in self._containers:
-            container.kill()
-
     def clean_network(self):
         """
             Remove the network
@@ -210,6 +204,22 @@ class Side(SideBase):
         self.fclean()
         self.build()
         self.run()
+    
+    def _list(self):
+        """
+            List the availables keys
+        """
+        
+        exclude = (
+            "base.Dockerfile",
+        )
+        
+        keys = filter(
+            lambda f: not f in exclude,
+            os.listdir(self._side_folder)
+        )
+        
+        print("\n".join(keys))
     
     @property
     def image(self) -> str:
@@ -243,9 +253,9 @@ class SideCli(ArgumentParser):
         )
         
         self.add_argument(
-            "--clean",
+            "-l", "--list",
             action="store_true",
-            help="Kill the instances"
+            help="List the availables keys"
         )
     
     def setup(self):

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """main module"""
 
 import docker
@@ -43,16 +45,14 @@ def main():
     
     Cli.pre_check()
     
-    # try:
-    side_type = SideType(argv.pop(1)).name
-    tw = Tw(SideType[side_type])
-    
-    tw()
-    # except TwError as error:
-    #     print(error, file=stderr)
-    # except Exception as error:
-    #     print(error, file=stderr)
-    #     exit(1)
+    try:
+        side_type = SideType(argv.pop(1)).name
+        tw = Tw(SideType[side_type])
+        
+        tw()
+    except Exception as error:
+        print(error, file=stderr)
+        exit(1)
 
 if __name__ == "__main__":
     main()

@@ -1,14 +1,11 @@
 """tw main module"""
 
-import argparse
-
-from typing import Any, Dict, Tuple
+from typing import Any, Tuple
 
 from sides.model import SideType, Side, SideCli
 from sides.server import ServerCli, Server
 from sides.client import ClientCli, Client
 from exceptions.tw import TwError
-# from .sides.client import Client
 
 SideTuple = Tuple[SideCli, Side]
 

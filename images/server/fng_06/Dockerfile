@@ -20,7 +20,7 @@ RUN apk update && apk --update add --no-cache --virtual .build-dependencies \
 # Symlink python
 RUN ln -sf python3 /usr/bin/python
 
-ENV DIRNAME fng2
+ENV DIRNAME server
 
 # Cloning the repository
 RUN git clone https://github.com/Jupeyy/teeworlds-fng2-mod.git --branch fng_06 $DIRNAME
@@ -34,6 +34,9 @@ RUN mkdir -p build && \
     make && \
     cp -r * .. && cd ..
 
-COPY server.cfg fng.cfg
+# Prevention
+RUN rm fng.cfg
+
+COPY autoexec.cfg autoexec.cfg
 
 ENTRYPOINT [ "sh", "start.sh" ]

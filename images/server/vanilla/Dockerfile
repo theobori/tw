@@ -1,6 +1,6 @@
 FROM tw_base_server:latest
 
-ENV DIRNAME vanilla
+ENV DIRNAME server
 
 # Cloning the repository
 RUN git clone https://github.com/teeworlds/teeworlds.git $DIRNAME --recurse-submodules
