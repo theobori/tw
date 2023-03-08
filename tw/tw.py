@@ -6,14 +6,15 @@ from typing import Any, Dict, Tuple
 
 from sides.model import SideType, Side, SideCli
 from sides.server import ServerCli, Server
+from sides.client import ClientCli, Client
 from exceptions.tw import TwError
 # from .sides.client import Client
 
 SideTuple = Tuple[SideCli, Side]
 
 SIDE_LINK = {
-    SideType.CLIENT: (ServerCli, Server),
-    SideType.SERVER: (ServerCli, Server)
+    SideType.SERVER: (ServerCli, Server),
+    SideType.CLIENT: (ClientCli, Client)
 }
 
 class Tw:

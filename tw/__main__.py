@@ -1,5 +1,7 @@
 """main module"""
 
+import docker
+
 from sys import stderr, argv
 
 from exceptions.tw import TwError
@@ -8,6 +10,7 @@ from sides.model import SideType
 
 class Cli:
     """
+        Python create executable module
         Static class containg some cli functions
     """
 
@@ -26,7 +29,7 @@ class Cli:
         """
 
         if len(argv) < 2:
-            print("Missing CLI arguments")
+            Cli.__print_help()
             exit(1)
         
         if argv[1] in ("-h", "--help"):
@@ -49,6 +52,7 @@ def main():
     #     print(error, file=stderr)
     # except Exception as error:
     #     print(error, file=stderr)
+    #     exit(1)
 
 if __name__ == "__main__":
     main()

@@ -28,7 +28,7 @@ class Server(Side):
         """
             Set the server foward port
         """
-        
+
         self.__port = port
     
     def build(self):
