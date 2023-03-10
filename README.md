@@ -27,9 +27,11 @@ tw client --run teeworlds
 
 ⚠️ To run with a database, you must build with the flag
 
+❌ `--with-sql` is currently disbaled
+
 ```bash
-tw server -k ddnet --build --with-db
-tw server -k ddnet --run --with-db
+tw server -k ddnet --build --with-sql
+tw server -k ddnet --run --with-sql
 ```
 
 ## ℹ️ Note
