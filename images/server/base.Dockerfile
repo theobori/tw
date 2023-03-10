@@ -5,6 +5,7 @@ ONBUILD RUN apt update -y && apt upgrade -y
 ONBUILD RUN apt install -y \
     build-essential \
     cmake \
+    make \
     git \
     libfreetype6-dev \
     libsdl2-dev \

@@ -25,20 +25,34 @@ tw server -k vanilla --run -p 8303 -c $PWD/autoexec.cfg
 tw client --run teeworlds
 ```
 
+⚠️ To run with a database, you must build with the flag
+
+```bash
+tw server -k ddnet --build --with-db
+tw server -k ddnet --run --with-db
+```
+
 ## ℹ️ Note
 
 This CLI assumes that youre using X with an UNIX system based.
+
+Every available `keys`
+
+| Server | Client |
+:--- | :---: |
+| FNG2 | Teeworlds (default) |
+| Vanilla | |
+| DDNet | |
 
 ## ✍️ TODO
 
 | Feature | State |
 :--- | :---: |
+Add a database | ❌
+Add Docker volume for the storage | ❌
 Fix package relative imports | ✅
 Server custom config file | ✅
 Build and install `tw` as a CLI command | ✅
 Add a CLI arg to list the available keys | ✅
 Mount volume client side for user dir | ✅
 Forward UDP instead of TCP | ✅
-
-<!-- ## 📜 Usage example -->
-

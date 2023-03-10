@@ -1,5 +1,9 @@
 FROM alpine:latest
 
+ENV DIRNAME server
+ENV BUILD_DIR ${DIRNAME}_build
+ENV CONFIG autoexec.cfg
+
 # Install dependencies to build binaries
 RUN apk update && apk --update add --no-cache --virtual .build-dependencies \
     git \
@@ -20,23 +24,25 @@ RUN apk update && apk --update add --no-cache --virtual .build-dependencies \
 # Symlink python
 RUN ln -sf python3 /usr/bin/python
 
-ENV DIRNAME server
-
 # Cloning the repository
-RUN git clone https://github.com/Jupeyy/teeworlds-fng2-mod.git --branch fng_06 $DIRNAME
+RUN git clone https://github.com/Jupeyy/teeworlds-fng2-mod.git --branch fng_06 $BUILD_DIR
 
-WORKDIR $DIRNAME
+WORKDIR $BUILD_DIR
 
 # Building
 RUN mkdir -p build && \
     cd build && \
     cmake .. && \
     make && \
-    cp -r * .. && cd ..
+    mkdir -p /$DIRNAME && \
+    mv fng2_srv ../data ../start.sh /$DIRNAME
+
+WORKDIR /$DIRNAME
 
 # Prevention
-RUN rm fng.cfg
+RUN rm -f fng.cfg
+RUN rm -rf /$BUILD_DIR
 
-COPY autoexec.cfg autoexec.cfg
+COPY $CONFIG $CONFIG
 
 ENTRYPOINT [ "sh", "start.sh" ]

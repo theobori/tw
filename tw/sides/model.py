@@ -32,7 +32,7 @@ class SideBase:
     """
         Virtual pure interface for the `Side` class
         
-        This meFunctionthods will be used with the CLI args
+        This methods will be used with the CLI args
     """
 
     def build(self):
@@ -45,6 +45,13 @@ class SideBase:
     def run(self):
         """
             Run the container
+        """
+        
+        raise TwError("Not implemented !")
+
+    def clean(self):
+        """
+            Clean
         """
         
         raise TwError("Not implemented !")
@@ -75,7 +82,7 @@ class Side(SideBase):
         self._key = None
         self._docker = docker.from_env()
         self.__base_name = "tw_" + self._side.value
-    
+
     def __base_dockerfile(self) -> Union[str, None]:
         """
             Return base Dockerfile if exists or `None`
@@ -100,7 +107,7 @@ class Side(SideBase):
             Try to build a potential `base.dockerfile`
         """
         
-        if not (base := self.__base_dockerfile()):
+        if not self.__base_dockerfile():
             return
 
         self._docker.images.build(
@@ -109,20 +116,27 @@ class Side(SideBase):
             tag=self.__base_tag()
         )
     
-    @property
-    def _containers(self) -> list:
+    def _containers(self, pattern: str) -> list:
         """
             Return every `Side` containers
         """
         
         # Containers are called with the 
         # same base name as the image name
-        re_container = re.compile(rf"^/{self.image}\d+$")
-
+        re_container = re.compile(rf"{pattern}")
+        
         return filter(
             lambda c: re_container.fullmatch(c.attrs.get("Name")),
             self._docker.containers.list()
         )
+
+    @property
+    def _key_containers(self) -> list:
+        """
+            Use `self.containers` with `self.image`
+        """
+
+        return self._containers(f"^/{self.image}\d+$")
     
     @property
     def _container_last_id(self) -> int:
@@ -130,7 +144,7 @@ class Side(SideBase):
             Return the last id created
         """
 
-        containers = list(self._containers)
+        containers = list(self._key_containers)
 
         if len(containers) == 0:
             return 0
@@ -187,6 +201,10 @@ class Side(SideBase):
         
         pass
 
+    def clean(self):
+        for container in self._key_containers:
+            container.kill()
+
     def fclean(self):
         self.clean()
         self.clean_network()
@@ -220,7 +238,7 @@ class Side(SideBase):
         )
         
         print("\n".join(keys))
-    
+
     @property
     def image(self) -> str:
         """
@@ -232,6 +250,14 @@ class Side(SideBase):
     
         return self.__base_name + "_" + self._key
 
+    @property
+    def network(self) -> str:
+        """
+            Return the Docker image tag
+        """
+        
+        return self.image
+    
 class SideCli(ArgumentParser):
     """
         Model CLI manager
